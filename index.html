@@ -1198,6 +1198,7 @@
       })
     }
     function zone(x0, x1, z0, z1, kind, col) {
+      Ot
       const w = x1 - x0, d = z1 - z0, t = pat(kind, col); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(w / 2.5, d / 2.5);
       const m = new THREE.Mesh(new THREE.PlaneGeometry(w, d), new THREE.MeshStandardMaterial({ map: t, roughness: kind === 'tile' ? .3 : kind === 'wood' ? .45 : 1 })); m.rotation.x = -Math.PI / 2; m.position.set((x0 + x1) / 2, .015, (z0 + z1) / 2); m.receiveShadow = true; scene.add(m)
     }
@@ -2377,12 +2378,24 @@ ${c.ans.length ? `<details style="margin-top:6px"><summary class="mut">Jawaban t
        (3) tebakan otak luar -> (4) parser kata-kunci lama dengan bahasa gaul dinormalkan.
        Hasil Claude dan koreksi Bos dikirim ke otak luar agar ia belajar sendiri. */
     S.nlu = S.nlu !== false;
-    // Otak luar sekarang berjalan di Vercel serverless /api/otak.py
-    // Path relatif /otak otomatis mengarah ke domain yang sama (tidak perlu ubah manual)
-    const _OTAK_DEFAULT = (typeof OTAK_LUAR_URL !== 'undefined' && OTAK_LUAR_URL)
-      ? OTAK_LUAR_URL
-      : '/otak';
-    S.ext = S.ext || { on: true, url: _OTAK_DEFAULT };
+    // ── Deteksi environment & paksa URL yang benar ──────────────────────────
+    const _isVercel = location.protocol === 'https:' && location.hostname !== 'localhost';
+    const _isLocalWeb = location.hostname === '127.0.0.1' || location.hostname === 'localhost';
+    const _isFile = location.protocol === 'file:';
+
+    let _correctUrl;
+    if (_isVercel) _correctUrl = '/otak';                    // Vercel: path relatif
+    else if (_isLocalWeb) _correctUrl = 'http://127.0.0.1:8765';   // localhost: Python lokal
+    else _correctUrl = 'http://127.0.0.1:8765';   // file:// fallback
+
+    // Inisialisasi atau perbaiki URL yang tersimpan di localStorage
+    S.ext = S.ext || {};
+    // Selalu paksa URL yang tepat sesuai environment (cegah stale localStorage)
+    const _savedUrl = S.ext.url || '';
+    const _urlSalah = (_isVercel && (_savedUrl.startsWith('http://127') || _savedUrl.startsWith('http://localhost')))
+      || (!_isVercel && _savedUrl === '/otak');
+    if (!_savedUrl || _urlSalah) S.ext.url = _correctUrl;
+    if (S.ext.on === undefined) S.ext.on = true;
     const NLU_SLANG = { gak: 'tidak', ga: 'tidak', nggak: 'tidak', ngga: 'tidak', enggak: 'tidak', gk: 'tidak', tdk: 'tidak', yg: 'yang', utk: 'untuk', dgn: 'dengan', sdh: 'sudah', udah: 'sudah', udh: 'sudah', blm: 'belum', bsk: 'besok', tlg: 'tolong', tolongin: 'tolong', bikinin: 'buatkan', buatin: 'buatkan', bikin: 'buat', gedein: 'perbesar', kecilin: 'perkecil', cariin: 'carikan', kerjain: 'kerjakan', ngerjain: 'kerjakan', nganggur: 'luang', ngobrolin: 'bahas', ngomongin: 'bahas', ngopi: 'kopi', nongkrong: 'santai', thx: 'terima kasih', gercep: 'cepat', skrg: 'sekarang', pake: 'pakai', liat: 'lihat', gmn: 'bagaimana', gimana: 'bagaimana', trus: 'lalu', betulin: 'betulkan', benerin: 'betulkan', siapin: 'siapkan', garapin: 'garap', cekin: 'periksa', gaskeun: 'mulai', masukin: 'masukkan', simpenin: 'simpan', simpen: 'simpan', naro: 'taruh', naroh: 'taruh', nyimpen: 'simpan', kirimin: 'kirim', pindahin: 'pindahkan', ngupload: 'unggah', uploadin: 'unggah', dong: '', deh: '', sih: '', nih: '', tuh: '', kok: '' };
     function nluNorm(t) { return String(t).replace(/[\p{L}\p{N}']+/gu, w => { const l = w.toLowerCase(); return Object.prototype.hasOwnProperty.call(NLU_SLANG, l) ? NLU_SLANG[l] : w }).replace(/\s{2,}/g, ' ').replace(/\s+([,.!?])/g, '$1').trim() }
     const NLU = {
@@ -2595,17 +2608,18 @@ ${c.ans.length ? `<details style="margin-top:6px"><summary class="mut">Jawaban t
       e.title = 'Klik: nyala/mati otak_luar. Klik kanan: ubah alamat server.';
 
       const _cekOtak = async () => {
-        const h = await NLU.extCall('/stats', null, 3000);
+        const h = await NLU.extCall('/stats', null, 4000);
         if (h && h.ok) {
           NLU.extOk = true;
           toast('🧩 Otak luar tersambung · ' + (h.contoh_belajar || 0) + ' contoh · ' + (h.persen_mandiri || 0) + '% mandiri');
         } else {
           NLU.extOk = false;
-          const isVercel = location.hostname !== '127.0.0.1' && location.hostname !== 'localhost';
-          if (isVercel) {
-            toast('⚠️ Otak luar tidak merespons di ' + S.ext.url + ' — periksa deploy Vercel (api/otak.py).');
+          if (_isVercel) {
+            toast('⚠️ api/otak.py tidak merespons. Coba refresh halaman — Vercel mungkin sedang cold start.');
+          } else if (_isLocalWeb) {
+            toast('⚠️ Otak luar tidak jalan. Klik dua kali "MULAI KANTOR.bat" atau jalankan: py otak_luar.py');
           } else {
-            toast('⚠️ Otak luar tidak berjalan. Klik dua kali "MULAI KANTOR.bat" untuk memulai semua sekaligus, atau jalankan: py otak_luar.py');
+            toast('⚠️ Buka via web server, bukan file://. Klik dua kali "MULAI KANTOR.bat"');
           }
         }
         l2();

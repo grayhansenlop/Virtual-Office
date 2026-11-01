@@ -35,7 +35,7 @@
 </head>
 
 <body>
-  <title>Gray Hansen Learning Machine AI Virtual Office</title>
+  <title>Kantor Marketing AI v7</title>
   <style>
     :root {
       --bg: #0f141d;
@@ -384,7 +384,7 @@
     </div>
     <div id="panel">
       <div class="row sp">
-        <h1>🏢 Gray Hansen Learning Machine AI Virtual OfficeS</h1>
+        <h1>🏢 Kantor Marketing AI</h1>
         <div class="row" id="hdrb" style="flex-wrap:wrap;justify-content:flex-end"><button id="spd"
             title="Kecepatan simulasi">⏱ 1×</button><button id="cmb" title="Kamera mengikuti Bos (C)">🎥 Ikuti
             Bos</button><button id="brn" title="Otak AI: karakter berpikir memakai Claude">🧠 Otak: ON</button><button
@@ -471,6 +471,8 @@
         <div id="hrbox"></div>
       </div>
       <h2>Laporan masuk</h2>
+      <div class="chips"><button id="approveAll" style="background:#166534;color:#fff;font-weight:600">✅ Setujui Semua
+          Laporan</button></div>
       <div id="inbox"></div>
       <h2>Tim</h2>
       <div id="team"></div>
@@ -526,69 +528,11 @@
     let S; try { S = JSON.parse(localStorage.getItem(KEY)) } catch (e) { S = null }
     if (!S || !S.team || S.team.length > TEAM.length) S = fresh(); while (S.team.length < TEAM.length) S.team.push(newEmp(TEAM[S.team.length])); S.team.forEach(e => SK.forEach(k => { if (e.xp[k] === undefined) e.xp[k] = 0 })); if (!S.wb) S.wb = defWB();
     function save() { snap(); try { localStorage.setItem(KEY, JSON.stringify(S)); const e = document.getElementById('sv'); if (e) e.textContent = '💾 Tersimpan otomatis · ' + new Date().toTimeString().slice(0, 8) } catch (er) { } }
-
-    /* ── Sync state ke/dari GitHub via api/state ── */
     let _stateSha = null, _syncBusy = false;
-
-    // Client-side tick: hitung waktu berlalu, majukan simulasi tanpa cron server
-    function _clientTick(state) {
-      const now = Math.floor(Date.now() / 1000);
-      const last = state.last_tick || now;
-      const elapsed = Math.min(now - last, 86400); // max mundur 24 jam
-      if (elapsed < 60) return state;
-      const WORK_DUR = 25 * 60, COFFEE_DUR = 10 * 60, MEET_DUR = 30 * 60;
-      (state.roster || []).forEach(p => {
-        const mode = p.mode || 'luang', modeT = p.mode_t || now, dur = now - modeT;
-        if (mode === 'work' && dur >= WORK_DUR) {
-          if (p.cur) { p.done = (p.done || []); p.done.push({ ...p.cur, selesai: now }); if (p.done.length > 20) p.done = p.done.slice(-20); }
-          p.cur = {}; p.mode = 'luang'; p.mode_t = now;
-        } else if ((mode === 'coffee' && dur >= COFFEE_DUR) || (mode === 'meet' && dur >= MEET_DUR)) {
-          p.mode = 'luang'; p.mode_t = now;
-        } else if (mode === 'luang' && (p.queue || []).length > 0) {
-          p.cur = p.queue.shift(); p.mode = 'work'; p.mode_t = now;
-        }
-      });
-      state.last_tick = now;
-      return state;
-    }
-
-    async function syncLoad() {
-      if (location.protocol === 'file:') return;
-      try {
-        const r = await fetch('/api/state', { signal: AbortSignal.timeout(8000) });
-        if (!r.ok) return;
-        const j = await r.json();
-        if (j.ok && j.state && Object.keys(j.state).length > 0) {
-          _stateSha = j.sha;
-          const srv = j.state;
-          if (srv.ts && (!S.ts || srv.ts > S.ts)) {
-            // Majukan simulasi berdasarkan waktu berlalu sejak terakhir disimpan
-            const ticked = _clientTick(srv);
-            Object.assign(S, ticked);
-            localStorage.setItem(KEY, JSON.stringify(S));
-            if (typeof snap === 'function') snap();
-            console.log('[kantor] state dimuat & dimajukan, elapsed:', (ticked.last_tick - (srv.last_tick || ticked.last_tick)) + 's');
-            syncSave(); // simpan balik hasil tick
-          }
-        }
-      } catch (_) { }
-    }
-
-    async function syncSave() {
-      if (location.protocol === 'file:' || _syncBusy) return;
-      _syncBusy = true;
-      try {
-        S.ts = Date.now();
-        S.last_tick = Math.floor(S.ts / 1000);
-        const body = JSON.stringify({ state: S, sha: _stateSha });
-        const r = await fetch('/api/state', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body, signal: AbortSignal.timeout(10000) });
-        if (r.ok) { const j = await r.json(); if (j.sha) _stateSha = j.sha; }
-      } catch (_) { } finally { _syncBusy = false; }
-    }
-
-    // Load saat buka, simpan setiap 30 detik
-    syncLoad();
-    setInterval(syncSave, 30000);
+    function _clientTick(st) { const now = Math.floor(Date.now() / 1000); const el = Math.min(now - (st.last_tick || now), 86400); if (el < 60) return st; const W = 25 * 60, C = 10 * 60, M = 30 * 60; (st.roster || []).forEach(p => { const d = now - (p.mode_t || now); if (p.mode === 'work' && d >= W) { if (p.cur) { p.done = (p.done || []); p.done.push({ ...p.cur, selesai: now }); if (p.done.length > 20) p.done = p.done.slice(-20) } p.cur = {}; p.mode = 'luang'; p.mode_t = now } else if ((p.mode === 'coffee' && d >= C) || (p.mode === 'meet' && d >= M)) { p.mode = 'luang'; p.mode_t = now } else if (p.mode === 'luang' && (p.queue || []).length > 0) { p.cur = p.queue.shift(); p.mode = 'work'; p.mode_t = now } }); st.last_tick = now; return st }
+    async function syncLoad() { if (location.protocol === 'file:') return; try { const r = await fetch('/api/state', { signal: AbortSignal.timeout(8000) }); if (!r.ok) return; const j = await r.json(); if (j.ok && j.state && Object.keys(j.state).length > 0) { _stateSha = j.sha; const sv = j.state; if (sv.ts && (!S.ts || sv.ts > S.ts)) { const tk = _clientTick(sv); Object.assign(S, tk); localStorage.setItem(KEY, JSON.stringify(S)); if (typeof snap === 'function') snap(); syncSave() } } } catch (_) { } }
+    async function syncSave() { if (location.protocol === 'file:' || _syncBusy) return; _syncBusy = true; try { S.ts = Date.now(); S.last_tick = Math.floor(S.ts / 1000); const r = await fetch('/api/state', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ state: S, sha: _stateSha }), signal: AbortSignal.timeout(10000) }); if (r.ok) { const j = await r.json(); if (j.sha) _stateSha = j.sha } } catch (_) { } finally { _syncBusy = false } }
+    syncLoad(); setInterval(syncSave, 30000);
     const lvl = x => Math.floor(Math.sqrt(x / 20)) + 1;
     const R = TEAM.map((t, i) => ({ mode: 'idle', q: [], cur: null, prog: 0, dur: 1, idle: i * 2, path: [], pose: 1, bubT: 0, ms: 0, last: '', node: 's' + i, dest: 's' + i, after: '', o: {}, t: 0 }));
     let INBOX = (S.inbox || []).map(x => ({ ...x, tw: new Set(x.tw || []) })), SP = 1, UID = 1, sel = -1, follow = false;
@@ -1208,6 +1152,12 @@
       else if (b.dataset.d) makeDoc(id, b.dataset.d);
       else if (b.dataset.r) give(id, +b.dataset.r)
     });
+    $('#approveAll').onclick = function () {
+      if (!INBOX.length) { toast('Tidak ada laporan yang masuk.'); return; }
+      const n = INBOX.length;
+      INBOX.map(x => x.id).forEach(id => give(id, 3));
+      toast('✅ ' + n + ' laporan disetujui — karyawan kembali ke meja.');
+    };
     $('#who').innerHTML = '<option value="auto">Otomatis (paling ahli)</option>' + TEAM.map((t, i) => `<option value="${i}">${t.name} · ${t.role}</option>`).join('');
     ['Buat caption Instagram untuk kopi susu aren', 'Rancang iklan Meta Ads untuk promo akhir tahun', 'Desain poster promo akhir tahun', 'Riset pasar untuk produk baru varian matcha', 'Susun rencana rekrutmen 2 staf marketing', 'Riset kata kunci SEO untuk toko sepatu lokal'].forEach(t => { const b = document.createElement('button'); b.textContent = t; b.onclick = () => { $('#task').value = t }; $('#chips').appendChild(b) });
     $('#go').onclick = () => { assign($('#task').value, $('#who').value); $('#task').value = '' };
@@ -2440,15 +2390,7 @@ ${c.ans.length ? `<details style="margin-top:6px"><summary class="mut">Jawaban t
        (3) tebakan otak luar -> (4) parser kata-kunci lama dengan bahasa gaul dinormalkan.
        Hasil Claude dan koreksi Bos dikirim ke otak luar agar ia belajar sendiri. */
     S.nlu = S.nlu !== false;
-    // Auto-pilih URL otak sesuai environment (cegah mixed-content di Vercel)
-    (function () {
-      const onVercel = location.protocol === 'https:' && location.hostname !== 'localhost';
-      const correctUrl = onVercel ? '/otak' : 'http://127.0.0.1:8765';
-      S.ext = S.ext || {};
-      if (!S.ext.url || (onVercel && S.ext.url.startsWith('http://')) || (!onVercel && S.ext.url === '/otak'))
-        S.ext.url = correctUrl;
-      if (S.ext.on === undefined) S.ext.on = onVercel; // ON otomatis di Vercel, OFF di lokal
-    })();
+    (function () { const ov = location.protocol === 'https:' && location.hostname !== 'localhost'; const cu = ov ? '/otak' : 'http://127.0.0.1:8765'; S.ext = S.ext || {}; if (!S.ext.url || (ov && S.ext.url.startsWith('http://')) || (!ov && S.ext.url === '/otak')) S.ext.url = cu; if (S.ext.on === undefined) S.ext.on = ov; })();
     const NLU_SLANG = { gak: 'tidak', ga: 'tidak', nggak: 'tidak', ngga: 'tidak', enggak: 'tidak', gk: 'tidak', tdk: 'tidak', yg: 'yang', utk: 'untuk', dgn: 'dengan', sdh: 'sudah', udah: 'sudah', udh: 'sudah', blm: 'belum', bsk: 'besok', tlg: 'tolong', tolongin: 'tolong', bikinin: 'buatkan', buatin: 'buatkan', bikin: 'buat', gedein: 'perbesar', kecilin: 'perkecil', cariin: 'carikan', kerjain: 'kerjakan', ngerjain: 'kerjakan', nganggur: 'luang', ngobrolin: 'bahas', ngomongin: 'bahas', ngopi: 'kopi', nongkrong: 'santai', thx: 'terima kasih', gercep: 'cepat', skrg: 'sekarang', pake: 'pakai', liat: 'lihat', gmn: 'bagaimana', gimana: 'bagaimana', trus: 'lalu', betulin: 'betulkan', benerin: 'betulkan', siapin: 'siapkan', garapin: 'garap', cekin: 'periksa', gaskeun: 'mulai', masukin: 'masukkan', simpenin: 'simpan', simpen: 'simpan', naro: 'taruh', naroh: 'taruh', nyimpen: 'simpan', kirimin: 'kirim', pindahin: 'pindahkan', ngupload: 'unggah', uploadin: 'unggah', dong: '', deh: '', sih: '', nih: '', tuh: '', kok: '' };
     function nluNorm(t) { return String(t).replace(/[\p{L}\p{N}']+/gu, w => { const l = w.toLowerCase(); return Object.prototype.hasOwnProperty.call(NLU_SLANG, l) ? NLU_SLANG[l] : w }).replace(/\s{2,}/g, ' ').replace(/\s+([,.!?])/g, '$1').trim() }
     const NLU = {
@@ -2651,7 +2593,7 @@ ${c.ans.length ? `<details style="margin-top:6px"><summary class="mut">Jawaban t
       b.onclick = () => { S.nlu = !S.nlu; save(); lbl(); toast(S.nlu ? 'Bahasa bebas aktif' : 'Bahasa bebas mati, memakai format lama') }; $('#cc').prepend(b);
       const e = document.createElement('button'); const l2 = () => { e.textContent = '🧩 Otak luar: ' + (S.ext.on ? (NLU.extOk === false ? 'PUTUS' : 'ON') : 'OFF') }; l2();
       e.title = 'Program otak_luar.py yang belajar sendiri. Klik: nyala/mati. Klik kanan: ubah alamat (' + S.ext.url + ').';
-      e.onclick = async () => { S.ext.on = !S.ext.on; save(); l2(); if (S.ext.on) { const h = await NLU.extCall('/stats', null, 2500); if (h && h.ok) toast('Otak luar tersambung · ' + h.contoh_belajar + ' contoh dipelajari · ' + h.persen_mandiri + '% dijawab sendiri'); else toast((location.protocol === 'https:' && location.hostname !== 'localhost') ? '⚠️ api/otak.py tidak merespons — coba refresh halaman.' : '⚠️ Otak luar tidak berjalan. Klik dua kali "MULAI KANTOR.bat" atau jalankan: py otak_luar.py'); l2() } };
+      e.onclick = async () => { S.ext.on = !S.ext.on; save(); l2(); if (S.ext.on) { const h = await NLU.extCall('/stats', null, 2500); if (h && h.ok) toast('Otak luar tersambung · ' + h.contoh_belajar + ' contoh dipelajari · ' + h.persen_mandiri + '% dijawab sendiri'); else toast('Otak luar tidak ditemukan di ' + S.ext.url + '. Jalankan: python3 otak_luar.py'); l2() } };
       e.oncontextmenu = ev => { ev.preventDefault(); try { const u = prompt('Alamat otak luar:', S.ext.url); if (u) { S.ext.url = u.trim().replace(/\/+$/, ''); save(); NLU.extOk = null; l2() } } catch (_) { } };
       $('#cc').prepend(e); setInterval(l2, 4000)
     }

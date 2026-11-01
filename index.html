@@ -110,20 +110,63 @@
       }
 
       #panel {
-        display: none;
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 78dvh;
+        z-index: 30;
         border-left: 0;
-        border-top: 1px solid var(--line)
-      }
-
-      #app.pnl {
-        grid-template-rows: 46% 54%
+        border-top: 1px solid var(--line);
+        border-radius: 16px 16px 0 0;
+        box-shadow: 0 -8px 28px rgba(0, 0, 0, .35);
+        padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
+        transform: translateY(105%);
+        visibility: hidden;
+        transition: transform .25s ease, visibility 0s linear .25s
       }
 
       #app.pnl #panel {
-        display: block
+        transform: none;
+        visibility: visible;
+        transition: transform .25s ease
+      }
+
+      #pbd {
+        display: block;
+        position: fixed;
+        inset: 0;
+        z-index: 20;
+        background: rgba(0, 0, 0, .45);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity .25s ease
+      }
+
+      #app.pnl #pbd {
+        opacity: 1;
+        pointer-events: auto
+      }
+
+      #pclose {
+        display: flex
       }
 
       #mnb {
+        display: block
+      }
+
+      #app.pnl #mnb {
+        display: none
+      }
+
+      #hint {
+        display: none
+      }
+
+      #view.fp #hint {
         display: block
       }
 
@@ -429,8 +472,12 @@
     }
 
     /* ===== POV Bos ===== */
-    #mnb{display:none;position:absolute;left:50%;bottom:calc(12px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:9;font-size:20px;line-height:1;letter-spacing:3px;min-width:76px;min-height:44px;padding:10px 22px;border-radius:22px;background:rgba(15,20,29,.72);color:#fff;border-color:rgba(255,255,255,.25);backdrop-filter:blur(4px)}
+    #mnb{position:absolute;left:50%;bottom:calc(12px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:9;font-size:20px;line-height:1;letter-spacing:0;font-size:15px;font-weight:600;min-width:96px;min-height:44px;padding:10px 22px;border-radius:22px;background:rgba(15,20,29,.72);color:#fff;border-color:rgba(255,255,255,.25);backdrop-filter:blur(4px)}
     #app.pnl #mnb{background:var(--acc);border-color:var(--acc)}
+    @media(min-width:821px){#pbd,#pclose{display:none}}
+    #pclose{position:sticky;top:-14px;z-index:5;margin:-14px -14px 10px;padding:8px 14px;background:var(--bg);border-bottom:1px solid var(--line);align-items:center;justify-content:space-between;font-weight:700}
+    #pclose button{min-height:36px;padding:6px 14px}
+    @media(min-width:821px){#mnb{display:none!important}}
     #vtools{position:absolute;right:12px;top:10px;z-index:5;display:flex;gap:6px}
     #fpb,#flb{background:rgba(15,20,29,.72);color:#fff;border-color:rgba(255,255,255,.25);backdrop-filter:blur(4px)}
     #fpb.on{background:var(--acc);border-color:var(--acc)}
@@ -443,6 +490,7 @@
     #view.fp #joy{display:block}
     #hint{max-width:calc(100% - 24px)}
     #view.fp canvas{cursor:crosshair}
+    #view.fp #hint{background:none;padding:0;text-shadow:0 1px 3px rgba(0,0,0,.8),0 0 2px rgba(0,0,0,.8)}
     #view{touch-action:none;-webkit-user-select:none;user-select:none}
     #panel{touch-action:pan-y}
     button{touch-action:manipulation}
@@ -451,13 +499,15 @@
   <div id="app">
     <div id="view">
       <div id="hint">WASD / klik lantai: jalan · E: bicara · C: kamera · V: POV Bos · seret: putar · scroll: zoom</div>
-      <button id="mnb" aria-label="Menu" aria-expanded="false" title="Buka/tutup panel">•••</button>
+      <button id="mnb" aria-label="Menu" aria-expanded="false" title="Buka/tutup panel">☰ Menu</button>
       <div id="vtools"><button id="flb" title="Tampilkan semua lantai atau hanya lantai 1">🏢 Semua lantai</button><button id="fpb" title="Lihat dari mata Bos (V)">👁 POV Bos</button></div>
       <div id="xh"></div>
       <div id="joy" aria-label="Joystick gerak"><div id="jk"></div></div>
       <div id="acts"><button id="actTalk">💬 Bicara</button><button id="actSeat">🪑 Ke Kursi</button></div>
     </div>
+    <div id="pbd"></div>
     <div id="panel">
+      <div id="pclose"><span>🏢 Panel Kantor</span><button id="pcb" aria-label="Tutup panel">✕ Tutup</button></div>
       <div class="row sp">
         <h1>🏢 Kantor Marketing AI</h1>
         <div class="row" id="hdrb" style="flex-wrap:wrap;justify-content:flex-end"><button id="spd"
@@ -1382,7 +1432,7 @@
       COL.push([-11.3, 11.7, -8.15, 11.85, 1], [-8.3, 10.1, -8.15, 11.7, 1], [-11.7, 13.7, -5.1, 15.3, 1]);
     }
     const warm3 = new THREE.PointLight(0xffe2b0, .55, 16); warm3.position.set(-8.4, H2 + 3, 14); scene.add(warm3);
-    const ceilF2 = new THREE.Mesh(new THREE.PlaneGeometry(10.9, 7.5), new THREE.MeshStandardMaterial({ color: 0xeceae4, roughness: 1 })); ceilF2.rotation.x = Math.PI / 2; ceilF2.position.set(-8.6, H2 + 3.4, 13.7); ceilF2.visible = false; scene.add(ceilF2);
+    const ceilF2 = new THREE.Mesh(new THREE.PlaneGeometry(10.9, 7.5), new THREE.MeshBasicMaterial({ color: 0xe4e1da, side: THREE.DoubleSide })); ceilF2.rotation.x = Math.PI / 2; ceilF2.position.set(-8.6, H2 + 3.4, 13.7); ceilF2.visible = false; scene.add(ceilF2);
     /* ruang IT */
     B(.9, 1.9, .8, 0x20242c, -4.1, .95, 22.7); B(.9, 1.9, .8, 0x20242c, -5.2, .95, 22.7);[-4.1, -5.2].forEach(x => [1.2, 1.5, 1.8].forEach(y => B(.5, .04, .02, 0x4cc38a, x, y, 22.28)));
     {
@@ -1468,7 +1518,7 @@
     let fp = false, fy = 0, fpp = 0, fpZ = 0; const joy = { x: 0, y: 0 };
     function fovFor() { return (camera.aspect < 1 ? 80 : 70) + fpZ }
     function fpCam() { const b = boss; camera.rotation.order = 'YXZ'; camera.position.set(b.x - Math.sin(fy) * .12, b.y + 1.68 - .38 * b.st, b.z - Math.cos(fy) * .12); camera.rotation.set(fpp, fy, 0) }
-    const ceil = new THREE.Mesh(new THREE.PlaneGeometry(28, 36), new THREE.MeshStandardMaterial({ color: 0xeceae4, roughness: 1 })); ceil.rotation.x = Math.PI / 2; ceil.position.set(0, 4.2, 6); ceil.visible = false; scene.add(ceil);
+    const ceil = new THREE.Mesh(new THREE.PlaneGeometry(28, 36), new THREE.MeshBasicMaterial({ color: 0xe4e1da, side: THREE.DoubleSide })); ceil.rotation.x = Math.PI / 2; ceil.position.set(0, 4.2, 6); ceil.visible = false; scene.add(ceil);
     function cam() { if (fp) { fpCam(); return } camera.position.set(tg.x + rad * Math.sin(ph) * Math.sin(th), tg.y + rad * Math.cos(ph), tg.z + rad * Math.sin(ph) * Math.cos(th)); camera.lookAt(tg) }
     let drag = null, down = null; const cv = renderer.domElement, ray = new THREE.Raycaster(), mp = new THREE.Vector2();
     function pick(e) {
@@ -1517,7 +1567,10 @@
     }
     $('#fpb').onclick = () => setFP(!fp);
     $('#flb').onclick = () => { vm = vm === 'all' ? 'f1' : 'all'; $('#flb').textContent = vm === 'all' ? '🏢 Semua lantai' : '🏢 Lantai 1 saja' };
-    $('#mnb').onclick = () => { const o = $('#app').classList.toggle('pnl'); $('#mnb').setAttribute('aria-expanded', o) };
+    const setPnl = o => { $('#app').classList.toggle('pnl', o); $('#mnb').setAttribute('aria-expanded', o) };
+    $('#mnb').onclick = () => setPnl(true);
+    $('#pcb').onclick = $('#pbd').onclick = () => setPnl(false);
+    addEventListener('keydown', e => { if (e.key === 'Escape') setPnl(false) });
     (function () {
       const jb = $('#joy'), jk = $('#jk'); let jid = null;
       function jset(e) {

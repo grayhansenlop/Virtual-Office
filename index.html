@@ -384,7 +384,7 @@
     </div>
     <div id="panel">
       <div class="row sp">
-        <h1>🏢 Gray Hansen Learning Machine AI Virtual Office</h1>
+        <h1>🏢 Gray Hansen Learning Machine AI Virtual OfficeS</h1>
         <div class="row" id="hdrb" style="flex-wrap:wrap;justify-content:flex-end"><button id="spd"
             title="Kecepatan simulasi">⏱ 1×</button><button id="cmb" title="Kamera mengikuti Bos (C)">🎥 Ikuti
             Bos</button><button id="brn" title="Otak AI: karakter berpikir memakai Claude">🧠 Otak: ON</button><button
@@ -526,6 +526,41 @@
     let S; try { S = JSON.parse(localStorage.getItem(KEY)) } catch (e) { S = null }
     if (!S || !S.team || S.team.length > TEAM.length) S = fresh(); while (S.team.length < TEAM.length) S.team.push(newEmp(TEAM[S.team.length])); S.team.forEach(e => SK.forEach(k => { if (e.xp[k] === undefined) e.xp[k] = 0 })); if (!S.wb) S.wb = defWB();
     function save() { snap(); try { localStorage.setItem(KEY, JSON.stringify(S)); const e = document.getElementById('sv'); if (e) e.textContent = '💾 Tersimpan otomatis · ' + new Date().toTimeString().slice(0, 8) } catch (er) { } }
+
+    /* ── Sync state ke/dari GitHub via api/state ── */
+    let _stateSha = null, _syncBusy = false;
+    async function syncLoad() {
+      if (location.protocol === 'file:') return; // tidak sync di file://
+      try {
+        const r = await fetch('/api/state', { signal: AbortSignal.timeout(8000) });
+        if (!r.ok) return;
+        const j = await r.json();
+        if (j.ok && j.state && Object.keys(j.state).length > 0) {
+          _stateSha = j.sha;
+          // Merge: pakai state dari server jika lebih baru
+          const srv = j.state;
+          if (srv.ts && (!S.ts || srv.ts > S.ts)) {
+            Object.assign(S, srv);
+            localStorage.setItem(KEY, JSON.stringify(S));
+            if (typeof snap === 'function') snap();
+            console.log('[kantor] state dimuat dari server, ts:', srv.ts);
+          }
+        }
+      } catch (_) { }
+    }
+    async function syncSave() {
+      if (location.protocol === 'file:' || _syncBusy) return;
+      _syncBusy = true;
+      try {
+        S.ts = Date.now();
+        const body = JSON.stringify({ state: S, sha: _stateSha });
+        const r = await fetch('/api/state', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body, signal: AbortSignal.timeout(10000) });
+        if (r.ok) { const j = await r.json(); if (j.sha) _stateSha = j.sha; }
+      } catch (_) { } finally { _syncBusy = false; }
+    }
+    // Load saat buka, simpan setiap 30 detik
+    syncLoad();
+    setInterval(syncSave, 30000);
     const lvl = x => Math.floor(Math.sqrt(x / 20)) + 1;
     const R = TEAM.map((t, i) => ({ mode: 'idle', q: [], cur: null, prog: 0, dur: 1, idle: i * 2, path: [], pose: 1, bubT: 0, ms: 0, last: '', node: 's' + i, dest: 's' + i, after: '', o: {}, t: 0 }));
     let INBOX = (S.inbox || []).map(x => ({ ...x, tw: new Set(x.tw || []) })), SP = 1, UID = 1, sel = -1, follow = false;

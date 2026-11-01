@@ -1198,7 +1198,6 @@
       })
     }
     function zone(x0, x1, z0, z1, kind, col) {
-      Ot
       const w = x1 - x0, d = z1 - z0, t = pat(kind, col); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(w / 2.5, d / 2.5);
       const m = new THREE.Mesh(new THREE.PlaneGeometry(w, d), new THREE.MeshStandardMaterial({ map: t, roughness: kind === 'tile' ? .3 : kind === 'wood' ? .45 : 1 })); m.rotation.x = -Math.PI / 2; m.position.set((x0 + x1) / 2, .015, (z0 + z1) / 2); m.receiveShadow = true; scene.add(m)
     }
@@ -2378,24 +2377,15 @@ ${c.ans.length ? `<details style="margin-top:6px"><summary class="mut">Jawaban t
        (3) tebakan otak luar -> (4) parser kata-kunci lama dengan bahasa gaul dinormalkan.
        Hasil Claude dan koreksi Bos dikirim ke otak luar agar ia belajar sendiri. */
     S.nlu = S.nlu !== false;
-    // ── Deteksi environment & paksa URL yang benar ──────────────────────────
-    const _isVercel = location.protocol === 'https:' && location.hostname !== 'localhost';
-    const _isLocalWeb = location.hostname === '127.0.0.1' || location.hostname === 'localhost';
-    const _isFile = location.protocol === 'file:';
-
-    let _correctUrl;
-    if (_isVercel) _correctUrl = '/otak';                    // Vercel: path relatif
-    else if (_isLocalWeb) _correctUrl = 'http://127.0.0.1:8765';   // localhost: Python lokal
-    else _correctUrl = 'http://127.0.0.1:8765';   // file:// fallback
-
-    // Inisialisasi atau perbaiki URL yang tersimpan di localStorage
-    S.ext = S.ext || {};
-    // Selalu paksa URL yang tepat sesuai environment (cegah stale localStorage)
-    const _savedUrl = S.ext.url || '';
-    const _urlSalah = (_isVercel && (_savedUrl.startsWith('http://127') || _savedUrl.startsWith('http://localhost')))
-      || (!_isVercel && _savedUrl === '/otak');
-    if (!_savedUrl || _urlSalah) S.ext.url = _correctUrl;
-    if (S.ext.on === undefined) S.ext.on = true;
+    // Auto-pilih URL otak sesuai environment (cegah mixed-content di Vercel)
+    (function () {
+      const onVercel = location.protocol === 'https:' && location.hostname !== 'localhost';
+      const correctUrl = onVercel ? '/otak' : 'http://127.0.0.1:8765';
+      S.ext = S.ext || {};
+      if (!S.ext.url || (onVercel && S.ext.url.startsWith('http://')) || (!onVercel && S.ext.url === '/otak'))
+        S.ext.url = correctUrl;
+      if (S.ext.on === undefined) S.ext.on = onVercel; // ON otomatis di Vercel, OFF di lokal
+    })();
     const NLU_SLANG = { gak: 'tidak', ga: 'tidak', nggak: 'tidak', ngga: 'tidak', enggak: 'tidak', gk: 'tidak', tdk: 'tidak', yg: 'yang', utk: 'untuk', dgn: 'dengan', sdh: 'sudah', udah: 'sudah', udh: 'sudah', blm: 'belum', bsk: 'besok', tlg: 'tolong', tolongin: 'tolong', bikinin: 'buatkan', buatin: 'buatkan', bikin: 'buat', gedein: 'perbesar', kecilin: 'perkecil', cariin: 'carikan', kerjain: 'kerjakan', ngerjain: 'kerjakan', nganggur: 'luang', ngobrolin: 'bahas', ngomongin: 'bahas', ngopi: 'kopi', nongkrong: 'santai', thx: 'terima kasih', gercep: 'cepat', skrg: 'sekarang', pake: 'pakai', liat: 'lihat', gmn: 'bagaimana', gimana: 'bagaimana', trus: 'lalu', betulin: 'betulkan', benerin: 'betulkan', siapin: 'siapkan', garapin: 'garap', cekin: 'periksa', gaskeun: 'mulai', masukin: 'masukkan', simpenin: 'simpan', simpen: 'simpan', naro: 'taruh', naroh: 'taruh', nyimpen: 'simpan', kirimin: 'kirim', pindahin: 'pindahkan', ngupload: 'unggah', uploadin: 'unggah', dong: '', deh: '', sih: '', nih: '', tuh: '', kok: '' };
     function nluNorm(t) { return String(t).replace(/[\p{L}\p{N}']+/gu, w => { const l = w.toLowerCase(); return Object.prototype.hasOwnProperty.call(NLU_SLANG, l) ? NLU_SLANG[l] : w }).replace(/\s{2,}/g, ' ').replace(/\s+([,.!?])/g, '$1').trim() }
     const NLU = {
@@ -2596,69 +2586,11 @@ ${c.ans.length ? `<details style="margin-top:6px"><summary class="mut">Jawaban t
       const b = document.createElement('button'); const lbl = () => { b.textContent = '🗣 Bahasa bebas: ' + (S.nlu ? 'ON' : 'OFF') }; lbl();
       b.title = 'ON: pesan dibaca model bahasa/otak luar. OFF: hanya format kata-kunci lama.';
       b.onclick = () => { S.nlu = !S.nlu; save(); lbl(); toast(S.nlu ? 'Bahasa bebas aktif' : 'Bahasa bebas mati, memakai format lama') }; $('#cc').prepend(b);
-
-      /* ── Tombol Otak Luar ── */
-      const e = document.createElement('button');
-      const l2 = () => {
-        const st = S.ext.on ? (NLU.extOk === false ? '🔴 PUTUS' : '🟢 ON') : '⚫ OFF';
-        e.textContent = '🧩 Otak luar: ' + st;
-        e.style.background = S.ext.on && NLU.extOk !== false ? '#1a472a' : S.ext.on ? '#6b1a1a' : '';
-      };
-      l2();
-      e.title = 'Klik: nyala/mati otak_luar. Klik kanan: ubah alamat server.';
-
-      const _cekOtak = async () => {
-        const h = await NLU.extCall('/stats', null, 4000);
-        if (h && h.ok) {
-          NLU.extOk = true;
-          toast('🧩 Otak luar tersambung · ' + (h.contoh_belajar || 0) + ' contoh · ' + (h.persen_mandiri || 0) + '% mandiri');
-        } else {
-          NLU.extOk = false;
-          if (_isVercel) {
-            toast('⚠️ api/otak.py tidak merespons. Coba refresh halaman — Vercel mungkin sedang cold start.');
-          } else if (_isLocalWeb) {
-            toast('⚠️ Otak luar tidak jalan. Klik dua kali "MULAI KANTOR.bat" atau jalankan: py otak_luar.py');
-          } else {
-            toast('⚠️ Buka via web server, bukan file://. Klik dua kali "MULAI KANTOR.bat"');
-          }
-        }
-        l2();
-      };
-
-      e.onclick = async () => {
-        S.ext.on = !S.ext.on; save();
-        if (S.ext.on) {
-          // Tampilkan "sedang menyambung..." saat baru di-ON
-          e.textContent = '🧩 Otak luar: ⏳ menyambung...';
-          e.disabled = true;
-          await _cekOtak();
-          e.disabled = false;
-        } else {
-          // Saat di-OFF, reset state
-          NLU.extOk = null;
-          toast('🧩 Otak luar dimatikan.');
-        }
-        l2();
-      };
-      e.oncontextmenu = ev => {
-        ev.preventDefault();
-        try {
-          const u = prompt('Alamat otak luar (kosongkan = /otak untuk Vercel, http://127.0.0.1:8765 untuk lokal):', S.ext.url);
-          if (u !== null) { S.ext.url = (u.trim() || '/otak').replace(/\/+$/, ''); save(); NLU.extOk = null; l2(); }
-        } catch (_) { }
-      };
-      $('#cc').prepend(e);
-      setInterval(l2, 4000);
-      // Auto warm-up: ping otak saat halaman pertama dibuka
-      // Di Vercel: wake up serverless function agar tidak cold-start saat pertama pakai
-      if (S.ext.on) {
-        // Ping pertama (silent) untuk warm-up serverless
-        setTimeout(async () => {
-          try { await fetch(S.ext.url + '/health', { method: 'GET', signal: AbortSignal.timeout(5000) }); } catch (_) { }
-        }, 500);
-        // Cek dan tampilkan status setelah server siap
-        setTimeout(_cekOtak, 2500);
-      }
+      const e = document.createElement('button'); const l2 = () => { e.textContent = '🧩 Otak luar: ' + (S.ext.on ? (NLU.extOk === false ? 'PUTUS' : 'ON') : 'OFF') }; l2();
+      e.title = 'Program otak_luar.py yang belajar sendiri. Klik: nyala/mati. Klik kanan: ubah alamat (' + S.ext.url + ').';
+      e.onclick = async () => { S.ext.on = !S.ext.on; save(); l2(); if (S.ext.on) { const h = await NLU.extCall('/stats', null, 2500); if (h && h.ok) toast('Otak luar tersambung · ' + h.contoh_belajar + ' contoh dipelajari · ' + h.persen_mandiri + '% dijawab sendiri'); else toast((location.protocol === 'https:' && location.hostname !== 'localhost') ? '⚠️ api/otak.py tidak merespons — coba refresh halaman.' : '⚠️ Otak luar tidak berjalan. Klik dua kali "MULAI KANTOR.bat" atau jalankan: py otak_luar.py'); l2() } };
+      e.oncontextmenu = ev => { ev.preventDefault(); try { const u = prompt('Alamat otak luar:', S.ext.url); if (u) { S.ext.url = u.trim().replace(/\/+$/, ''); save(); NLU.extOk = null; l2() } } catch (_) { } };
+      $('#cc').prepend(e); setInterval(l2, 4000)
     }
     ['Rina, tolong bikinin caption buat promo akhir bulan, sekalian Dewi cariin referensi visualnya', 'Semua kumpul dong, kita ngobrol soal target bulan depan', 'Siapa aja yang lagi nganggur sekarang?', 'Kirana, tombol kirimnya kekecilan deh, gedein dikit'].forEach(t => { const b = document.createElement('button'); b.textContent = t; b.onclick = () => { $('#say').value = t; $('#say').focus() }; $('#cc').appendChild(b) });
 

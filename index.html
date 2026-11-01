@@ -529,35 +529,63 @@
 
     /* ── Sync state ke/dari GitHub via api/state ── */
     let _stateSha = null, _syncBusy = false;
+
+    // Client-side tick: hitung waktu berlalu, majukan simulasi tanpa cron server
+    function _clientTick(state) {
+      const now = Math.floor(Date.now() / 1000);
+      const last = state.last_tick || now;
+      const elapsed = Math.min(now - last, 86400); // max mundur 24 jam
+      if (elapsed < 60) return state;
+      const WORK_DUR = 25 * 60, COFFEE_DUR = 10 * 60, MEET_DUR = 30 * 60;
+      (state.roster || []).forEach(p => {
+        const mode = p.mode || 'luang', modeT = p.mode_t || now, dur = now - modeT;
+        if (mode === 'work' && dur >= WORK_DUR) {
+          if (p.cur) { p.done = (p.done || []); p.done.push({ ...p.cur, selesai: now }); if (p.done.length > 20) p.done = p.done.slice(-20); }
+          p.cur = {}; p.mode = 'luang'; p.mode_t = now;
+        } else if ((mode === 'coffee' && dur >= COFFEE_DUR) || (mode === 'meet' && dur >= MEET_DUR)) {
+          p.mode = 'luang'; p.mode_t = now;
+        } else if (mode === 'luang' && (p.queue || []).length > 0) {
+          p.cur = p.queue.shift(); p.mode = 'work'; p.mode_t = now;
+        }
+      });
+      state.last_tick = now;
+      return state;
+    }
+
     async function syncLoad() {
-      if (location.protocol === 'file:') return; // tidak sync di file://
+      if (location.protocol === 'file:') return;
       try {
         const r = await fetch('/api/state', { signal: AbortSignal.timeout(8000) });
         if (!r.ok) return;
         const j = await r.json();
         if (j.ok && j.state && Object.keys(j.state).length > 0) {
           _stateSha = j.sha;
-          // Merge: pakai state dari server jika lebih baru
           const srv = j.state;
           if (srv.ts && (!S.ts || srv.ts > S.ts)) {
-            Object.assign(S, srv);
+            // Majukan simulasi berdasarkan waktu berlalu sejak terakhir disimpan
+            const ticked = _clientTick(srv);
+            Object.assign(S, ticked);
             localStorage.setItem(KEY, JSON.stringify(S));
             if (typeof snap === 'function') snap();
-            console.log('[kantor] state dimuat dari server, ts:', srv.ts);
+            console.log('[kantor] state dimuat & dimajukan, elapsed:', (ticked.last_tick - (srv.last_tick || ticked.last_tick)) + 's');
+            syncSave(); // simpan balik hasil tick
           }
         }
       } catch (_) { }
     }
+
     async function syncSave() {
       if (location.protocol === 'file:' || _syncBusy) return;
       _syncBusy = true;
       try {
         S.ts = Date.now();
+        S.last_tick = Math.floor(S.ts / 1000);
         const body = JSON.stringify({ state: S, sha: _stateSha });
         const r = await fetch('/api/state', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body, signal: AbortSignal.timeout(10000) });
         if (r.ok) { const j = await r.json(); if (j.sha) _stateSha = j.sha; }
       } catch (_) { } finally { _syncBusy = false; }
     }
+
     // Load saat buka, simpan setiap 30 detik
     syncLoad();
     setInterval(syncSave, 30000);

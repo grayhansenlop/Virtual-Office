@@ -27,16 +27,5 @@
       "src": "/(.*)",
       "dest": "/index.html"
     }
-  ],
-  "crons": [
-    {
-      "path": "/api/tick",
-      "schedule": "* * * * *"
-    }
-  ],
-  "env": {
-    "GITHUB_TOKEN": "@github_token",
-    "GITHUB_OWNER": "grayhansenlop",
-    "GITHUB_REPO": "kantor-state"
-  }
+  ]
 }

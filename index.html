@@ -35,7 +35,7 @@
 </head>
 
 <body>
-  <title>Gray Hansen Machine Learning 3D AI Virtual Office</title>
+  <title>Kantor Marketing AI v7</title>
   <style>
     :root {
       --bg: #0f141d;
@@ -377,14 +377,33 @@
       text-decoration: none;
       font-size: 12px
     }
+
+    /* ===== POV Bos ===== */
+    #fpb{position:absolute;right:12px;top:10px;z-index:5;background:rgba(15,20,29,.72);color:#fff;border-color:rgba(255,255,255,.25);backdrop-filter:blur(4px)}
+    #fpb.on{background:var(--acc);border-color:var(--acc)}
+    #xh{position:absolute;left:50%;top:50%;width:6px;height:6px;margin:-3px 0 0 -3px;border-radius:50%;background:rgba(255,255,255,.85);box-shadow:0 0 0 1px rgba(0,0,0,.5);pointer-events:none;display:none;z-index:4}
+    #joy{position:absolute;left:18px;bottom:46px;width:116px;height:116px;border-radius:50%;background:rgba(15,20,29,.45);border:2px solid rgba(255,255,255,.3);touch-action:none;z-index:5;display:none;user-select:none;-webkit-user-select:none}
+    #jk{position:absolute;left:50%;top:50%;width:46px;height:46px;margin:-23px 0 0 -23px;border-radius:50%;background:rgba(255,255,255,.75);box-shadow:0 2px 8px rgba(0,0,0,.4);pointer-events:none}
+    #acts{position:absolute;right:14px;bottom:46px;display:none;flex-direction:column;gap:8px;z-index:5}
+    #acts button{background:rgba(15,20,29,.72);color:#fff;border-color:rgba(255,255,255,.25);font-size:13px;padding:9px 12px}
+    #view.fp #joy,#view.fp #acts{display:flex}
+    #view.fp #joy{display:block}
+    @media(pointer:coarse){#joy{display:block}#acts{display:flex}}
+    #hint{max-width:calc(100% - 24px)}
+    #view.fp canvas{cursor:crosshair}
+    #view.fp #xh{display:block}
   </style>
   <div id="app">
     <div id="view">
-      <div id="hint">WASD / klik lantai: jalan · E: bicara · C: kamera · seret: putar · scroll: zoom</div>
+      <div id="hint">WASD / klik lantai: jalan · E: bicara · C: kamera · V: POV Bos · seret: putar · scroll: zoom</div>
+      <button id="fpb" title="Lihat dari mata Bos (V)">👁 POV Bos</button>
+      <div id="xh"></div>
+      <div id="joy" aria-label="Joystick gerak"><div id="jk"></div></div>
+      <div id="acts"><button id="actTalk">💬 Bicara</button><button id="actSeat">🪑 Ke Kursi</button></div>
     </div>
     <div id="panel">
       <div class="row sp">
-        <h1>🏢 Gray Hansen Machine Learning 3D AI Virtual Office</h1>
+        <h1>🏢 Kantor Marketing AI</h1>
         <div class="row" id="hdrb" style="flex-wrap:wrap;justify-content:flex-end"><button id="spd"
             title="Kecepatan simulasi">⏱ 1×</button><button id="cmb" title="Kamera mengikuti Bos (C)">🎥 Ikuti
             Bos</button><button id="brn" title="Otak AI: karakter berpikir memakai Claude">🧠 Otak: ON</button><button
@@ -922,7 +941,7 @@
       const g = x.createLinearGradient(0, 0, 1080, 1080); g.addColorStop(0, col); g.addColorStop(1, '#101826'); x.fillStyle = g; x.fillRect(0, 0, 1080, 1080);
       if (design) { x.fillStyle = 'rgba(255,255,255,.12)'; x.beginPath(); x.arc(850, 230, 260, 0, 7); x.fill(); x.beginPath(); x.arc(150, 950, 200, 0, 7); x.fill(); if (im) { const r0 = Math.max(400 / im.width, 300 / im.height), sw = 400 / r0, sh = 300 / r0; x.drawImage(im, (im.width - sw) / 2, (im.height - sh) / 2, sw, sh, 600, 60, 400, 300); x.fillStyle = 'rgba(255,255,255,.75)'; x.font = '20' + F; x.fillText(im.credit || '', 600, 392) } x.fillStyle = '#fff'; x.font = 'bold 84' + F; let y = wrapT(x, rp.text.toUpperCase(), 80, 380, 900, 100); x.font = '34' + F; x.fillStyle = 'rgba(255,255,255,.9)'; rp.lines.slice(0, 3).forEach(l => { y = wrapT(x, cl(l), 80, y + 20, 900, 46) }); x.fillStyle = '#fff'; x.fillRect(80, 930, 330, 80); x.fillStyle = col; x.font = 'bold 36' + F; x.fillText('COBA SEKARANG', 100, 983) }
       else { x.fillStyle = '#fff'; x.font = 'bold 52' + F; let y = wrapT(x, rp.text, 60, 110, 960, 62); rp.lines.slice(0, 5).forEach(l => { x.fillStyle = 'rgba(255,255,255,.14)'; x.fillRect(60, y + 10, 960, 130); x.fillStyle = '#fff'; x.font = '30' + F; wrapT(x, cl(l), 90, y + 60, 900, 40); y += 150 }) }
-      x.fillStyle = 'rgba(255,255,255,.7)'; x.font = '26' + F; x.fillText('Gray Hansen Machine Learning 3D AI Virtual Office · ' + t.name + ' · ' + t.role, 60, 1050); return new Promise(r => c.toBlob(r, 'image/jpeg', .92))
+      x.fillStyle = 'rgba(255,255,255,.7)'; x.font = '26' + F; x.fillText('Kantor Marketing AI · ' + t.name + ' · ' + t.role, 60, 1050); return new Promise(r => c.toBlob(r, 'image/jpeg', .92))
     }
     async function makeDoc(id, type) {
       const rp = INBOX.find(x => x.id === id); if (!rp) return; const t = TEAM[rp.emp], nm = (t.name + '_' + rp.text.slice(0, 20)).replace(/[^\w]+/g, '_');
@@ -1340,17 +1359,22 @@
     const bossTag = document.createElement('div'); bossTag.className = 'tag'; bossTag.innerHTML = '<div class="nm">Anda<small>Pimpinan</small></div>'; view.appendChild(bossTag);
     /* kamera & klik */
     let th = 0, ph = .95, rad = 30; const tg = new THREE.Vector3(0, 1, 4.5), V = new THREE.Vector3();
-    function cam() { camera.position.set(tg.x + rad * Math.sin(ph) * Math.sin(th), tg.y + rad * Math.cos(ph), tg.z + rad * Math.sin(ph) * Math.cos(th)); camera.lookAt(tg) }
+    /* --- POV Bos (orang pertama) --- */
+    let fp = false, fy = 0, fpp = 0, fpZ = 0; const joy = { x: 0, y: 0 };
+    function fovFor() { return (camera.aspect < 1 ? 80 : 70) + fpZ }
+    function fpCam() { const b = boss; camera.rotation.order = 'YXZ'; camera.position.set(b.x - Math.sin(fy) * .12, 1.68 - .38 * b.st, b.z - Math.cos(fy) * .12); camera.rotation.set(fpp, fy, 0) }
+    const ceil = new THREE.Mesh(new THREE.PlaneGeometry(28, 36), new THREE.MeshStandardMaterial({ color: 0xeceae4, roughness: 1 })); ceil.rotation.x = Math.PI / 2; ceil.position.set(0, 4.2, 6); ceil.visible = false; scene.add(ceil);
+    function cam() { if (fp) { fpCam(); return } camera.position.set(tg.x + rad * Math.sin(ph) * Math.sin(th), tg.y + rad * Math.cos(ph), tg.z + rad * Math.sin(ph) * Math.cos(th)); camera.lookAt(tg) }
     let drag = null, down = null; const cv = renderer.domElement, ray = new THREE.Raycaster(), mp = new THREE.Vector2();
     function pick(e) {
       const rc = cv.getBoundingClientRect(); mp.set((e.clientX - rc.left) / rc.width * 2 - 1, -(e.clientY - rc.top) / rc.height * 2 + 1); ray.setFromCamera(mp, camera);
       const h = ray.intersectObjects(OB.map(o => o.g), true)[0]; if (!h) return -1; let o = h.object; while (o && o.userData.emp === undefined) o = o.parent; return o ? o.userData.emp : -1
     }
     cv.addEventListener('pointerdown', e => { drag = down = [e.clientX, e.clientY]; cv.setPointerCapture(e.pointerId); cv.style.cursor = 'grabbing' });
-    cv.addEventListener('pointermove', e => { if (!drag) { cv.style.cursor = pick(e) >= 0 ? 'pointer' : 'grab'; return } th = Math.max(-1.4, Math.min(1.4, th - (e.clientX - drag[0]) * .006)); ph = Math.max(.4, Math.min(1.45, ph - (e.clientY - drag[1]) * .005)); drag = [e.clientX, e.clientY]; cam() });
-    cv.addEventListener('pointerup', e => { const moved = Math.hypot(e.clientX - down[0], e.clientY - down[1]); drag = null; cv.style.cursor = 'grab'; if (moved < 5) { const p = pick(e); if (p >= 0) select(p, true); else clickMove(e) } });
-    cv.addEventListener('wheel', e => { e.preventDefault(); rad = Math.max(7, Math.min(58, rad + e.deltaY * .015)); cam() }, { passive: false });
-    function resize() { const w = view.clientWidth, h = view.clientHeight; renderer.setPixelRatio(Math.min(2, devicePixelRatio)); renderer.setSize(w, h); camera.aspect = w / h; if (!resize.d) { rad = w / h < 1 ? 46 : 30; resize.d = 1 } camera.updateProjectionMatrix(); cam() }
+    cv.addEventListener('pointermove', e => { if (!drag) { cv.style.cursor = fp ? 'crosshair' : pick(e) >= 0 ? 'pointer' : 'grab'; return } if (fp) { fy -= (e.clientX - drag[0]) * .005; fpp = Math.max(-1.25, Math.min(1.25, fpp - (e.clientY - drag[1]) * .004)); drag = [e.clientX, e.clientY]; cam(); return } th = Math.max(-1.4, Math.min(1.4, th - (e.clientX - drag[0]) * .006)); ph = Math.max(.4, Math.min(1.45, ph - (e.clientY - drag[1]) * .005)); drag = [e.clientX, e.clientY]; cam() });
+    cv.addEventListener('pointerup', e => { const moved = Math.hypot(e.clientX - down[0], e.clientY - down[1]); drag = null; cv.style.cursor = fp ? 'crosshair' : 'grab'; if (moved < 5) { const p = pick(e); if (p >= 0) select(p, true); else clickMove(e) } });
+    cv.addEventListener('wheel', e => { e.preventDefault(); if (fp) { fpZ = Math.max(-30, Math.min(12, fpZ + e.deltaY * .02)); camera.fov = fovFor(); camera.updateProjectionMatrix(); return } rad = Math.max(7, Math.min(58, rad + e.deltaY * .015)); cam() }, { passive: false });
+    function resize() { const w = view.clientWidth, h = view.clientHeight; renderer.setPixelRatio(Math.min(2, devicePixelRatio)); renderer.setSize(w, h); camera.aspect = w / h; if (fp) camera.fov = fovFor(); if (!resize.d) { rad = w / h < 1 ? 46 : 30; resize.d = 1 } camera.updateProjectionMatrix(); cam() }
     new ResizeObserver(resize).observe(view);
 
 
@@ -1358,26 +1382,53 @@
     const boss = { x: 0, z: 7.3, tx: null, tz: null, ry: Math.PI, st: 1 }, KEYS = {}, SEAT = [0, 7.3]; let camB = false;
     const KM = { w: 'w', arrowup: 'w', s: 's', arrowdown: 's', a: 'a', arrowleft: 'a', d: 'd', arrowright: 'd' };
     function blocked(x, z) { if (x < -13.6 || x > 13.6 || z < -11.6 || z > 23.0) return true; return COL.some(c => x > c[0] - .28 && x < c[2] + .28 && z > c[1] - .28 && z < c[3] + .28) }
+    const wrapA = a => Math.atan2(Math.sin(a), Math.cos(a));
+    function setFP(v) {
+      if (v === fp) return; const b = boss;
+      if (v) { fy = wrapA(b.ry + Math.PI); fpp = -.04; fpZ = 0; fp = true; camera.fov = fovFor() }
+      else { fp = false; camera.fov = 45; tg.set(b.x, 1, b.z); th = Math.max(-1.4, Math.min(1.4, wrapA(fy))); camera.rotation.order = 'XYZ' }
+      camera.updateProjectionMatrix(); bossP.g.visible = !fp; bossTag.style.display = fp ? 'none' : 'block'; ceil.visible = fp; ring.visible = false;
+      view.classList.toggle('fp', fp); $('#fpb').classList.toggle('on', fp); $('#fpb').textContent = fp ? '👁 Keluar POV' : '👁 POV Bos';
+      $('#hint').textContent = fp ? 'POV Bos — WASD / joystick: jalan · seret layar / ←→: menoleh · E: bicara · V: keluar' : 'WASD / klik lantai: jalan · E: bicara · C: kamera · V: POV Bos · seret: putar · scroll: zoom';
+      cam()
+    }
+    $('#fpb').onclick = () => setFP(!fp);
+    (function () {
+      const jb = $('#joy'), jk = $('#jk'); let jid = null;
+      function jset(e) {
+        const r = jb.getBoundingClientRect(), R = r.width / 2 - 14; let dx = e.clientX - (r.left + r.width / 2), dy = e.clientY - (r.top + r.height / 2); const d = Math.hypot(dx, dy); if (d > R) { dx *= R / d; dy *= R / d }
+        jk.style.transform = `translate(${dx}px,${dy}px)`; let x = dx / R, y = -dy / R; if (Math.hypot(x, y) < .12) x = y = 0; joy.x = x; joy.y = y; if ((x || y) && !camB) setCam(true)
+      }
+      jb.addEventListener('pointerdown', e => { jid = e.pointerId; jb.setPointerCapture(jid); jset(e); e.preventDefault() });
+      jb.addEventListener('pointermove', e => { if (e.pointerId === jid) jset(e) });
+      const end = e => { if (e.pointerId !== jid) return; jid = null; joy.x = joy.y = 0; jk.style.transform = '' };
+      jb.addEventListener('pointerup', end); jb.addEventListener('pointercancel', end)
+    })();
+    function talkNear() { const i = nearest(3.2); if (i >= 0) { select(i, true); $('#say').focus(); chatLog('Sistem', 'Berbicara dengan ' + TEAM[i].name + ' (' + TEAM[i].role + ').') } else toast('Tidak ada karakter di dekat Anda. Dekati dulu.') }
+    $('#actTalk').onclick = talkNear;
+    $('#actSeat').onclick = () => { boss.tx = SEAT[0]; boss.tz = SEAT[1]; mark.position.set(SEAT[0], .05, SEAT[1]); mark.visible = true };
     function setCam(v) { camB = v; $('#cmb').textContent = v ? '🎥 Ikuti Bos ✓' : '🎥 Ikuti Bos' }
     addEventListener('keydown', e => {
       if (/INPUT|SELECT|TEXTAREA/.test(e.target.tagName)) { if (e.key === 'Escape') e.target.blur(); return } const k = e.key.toLowerCase();
+      if (fp && (k === 'arrowleft' || k === 'arrowright')) { KEYS[k === 'arrowleft' ? 'tl' : 'tr'] = 1; e.preventDefault(); return }
       if (KM[k]) { KEYS[KM[k]] = 1; setCam(true); e.preventDefault() }
-      else if (k === 'e') { e.preventDefault(); const i = nearest(3.2); if (i >= 0) { select(i, true); $('#say').focus(); chatLog('Sistem', 'Berbicara dengan ' + TEAM[i].name + ' (' + TEAM[i].role + ').') } else toast('Tidak ada karakter di dekat Anda. Dekati dulu.') }
+      else if (k === 'e') { e.preventDefault(); talkNear() }
+      else if (k === 'v') setFP(!fp);
       else if (k === 'c') setCam(!camB); else if (k === 'escape') select(-1)
     });
-    addEventListener('keyup', e => { const k = e.key.toLowerCase(); if (KM[k]) delete KEYS[KM[k]] }); addEventListener('blur', () => { for (const k in KEYS) delete KEYS[k] });
+    addEventListener('keyup', e => { const k = e.key.toLowerCase(); if (KM[k]) delete KEYS[KM[k]]; if (k === 'arrowleft') delete KEYS.tl; if (k === 'arrowright') delete KEYS.tr }); addEventListener('blur', () => { for (const k in KEYS) delete KEYS[k] });
     $('#cmb').onclick = () => setCam(!camB);
     function clickMove(e) {
       const rc = cv.getBoundingClientRect(); mp.set((e.clientX - rc.left) / rc.width * 2 - 1, -(e.clientY - rc.top) / rc.height * 2 + 1); ray.setFromCamera(mp, camera); const p = new THREE.Vector3();
       if (ray.ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), p)) { boss.tx = p.x; boss.tz = p.z; mark.position.set(p.x, .05, p.z); mark.visible = true; setCam(true) }
     }
     function bossUpd(dt, time) {
-      const b = boss, f = [-Math.sin(th), -Math.cos(th)], rt = [Math.cos(th), -Math.sin(th)], ix = (KEYS.d ? 1 : 0) - (KEYS.a ? 1 : 0), iz = (KEYS.w ? 1 : 0) - (KEYS.s ? 1 : 0); let dx = 0, dz = 0, moved = false;
+      const b = boss; if (fp) fy += ((KEYS.tl ? 1 : 0) - (KEYS.tr ? 1 : 0)) * 1.9 * dt; const A = fp ? fy : th, f = [-Math.sin(A), -Math.cos(A)], rt = [Math.cos(A), -Math.sin(A)], ix = (KEYS.d ? 1 : 0) - (KEYS.a ? 1 : 0) + joy.x, iz = (KEYS.w ? 1 : 0) - (KEYS.s ? 1 : 0) + joy.y; let dx = 0, dz = 0, moved = false;
       if (ix || iz) { b.tx = null; mark.visible = false; dx = rt[0] * ix + f[0] * iz; dz = rt[1] * ix + f[1] * iz }
       else if (b.tx !== null) { const ex = b.tx - b.x, ez = b.tz - b.z, d = Math.hypot(ex, ez); if (d < .15) { b.tx = null; mark.visible = false } else { dx = ex / d; dz = ez / d } }
       const l = Math.hypot(dx, dz);
       if (l > 0) {
-        dx /= l; dz /= l; const s = 3.4 * dt; if (!blocked(b.x + dx * s, b.z)) { b.x += dx * s; moved = true } if (!blocked(b.x, b.z + dz * s)) { b.z += dz * s; moved = true }
+        const mg = Math.min(1, l); dx /= l; dz /= l; const s = 3.4 * dt * mg; if (!blocked(b.x + dx * s, b.z)) { b.x += dx * s; moved = true } if (!blocked(b.x, b.z + dz * s)) { b.z += dz * s; moved = true }
         if (moved) b.ry = Math.atan2(dx, dz); else if (b.tx !== null) { b.tx = null; mark.visible = false }
       }
       const seated = !moved && Math.hypot(b.x - SEAT[0], b.z - SEAT[1]) < .45;
@@ -1388,7 +1439,8 @@
       bossP.hips[0].h.rotation.x = -1.5 * p + sw * (1 - p); bossP.hips[1].h.rotation.x = -1.5 * p - sw * (1 - p); bossP.hips.forEach(x => x.k.rotation.x = 1.5 * p);
       bossP.arms[0].rotation.x = -p - .08 * (1 - p) - sw * .9 * (1 - p) + Math.sin(time * 2) * .03; bossP.arms[1].rotation.x = -p - .08 * (1 - p) + sw * .9 * (1 - p) + Math.sin(time * 2 + 1) * .03;
       bossP.head.rotation.y = moved ? 0 : Math.sin(time * .4) * .25;
-      if (camB && !(sel >= 0 && follow)) { tg.x += (b.x - tg.x) * Math.min(1, dt * 2.5); tg.z += (b.z - tg.z) * Math.min(1, dt * 2.5); cam() }
+      if (fp) fpCam();
+      else if (camB && !(sel >= 0 && follow)) { tg.x += (b.x - tg.x) * Math.min(1, dt * 2.5); tg.z += (b.z - tg.z) * Math.min(1, dt * 2.5); cam() }
     }
 
     /* ---------- simulasi per frame ---------- */
@@ -1433,7 +1485,7 @@
     }
     function tags(i) {
       const r = R[i], t = TG[i]; OB[i].head.getWorldPosition(V); V.y += .35; V.project(camera); const w = view.clientWidth, h = view.clientHeight;
-      t.el.style.transform = `translate(${(V.x * .5 + .5) * w}px,${(-V.y * .5 + .5) * h}px) translate(-50%,-100%)`; t.el.style.display = V.z > 1 ? 'none' : 'block';
+      t.el.style.transform = `translate(${(V.x * .5 + .5) * w}px,${(-V.y * .5 + .5) * h}px) translate(-50%,-100%)`; t.el.style.display = (V.z > 1 || (fp && Math.hypot(OB[i].g.position.x - boss.x, OB[i].g.position.z - boss.z) > 9)) ? 'none' : 'block';
       t.bub.style.display = r.bubT > 0 ? 'block' : 'none'; t.bar.style.width = (r.mode === 'work' || r.mode === 'learn' ? r.prog * 100 : 0) + '%'
     }
     const clk = new THREE.Clock(); let lastUI = 0;
@@ -1880,7 +1932,7 @@
       });
       const ob = []; ob[1] = '<</Type/Catalog/Pages 2 0 R>>'; ob[3] = '<</Type/Font/Subtype/Type1/BaseFont/Helvetica>>'; ob[4] = '<</Type/Font/Subtype/Type1/BaseFont/Helvetica-Bold>>'; const kids = [];
       pg.forEach((p, n) => {
-        const pi = 5 + n * 2, ci = pi + 1; kids.push(pi + ' 0 R'); let c = 'BT /F2 12 Tf 50 812 Td (Gray Hansen Machine Learning 3D AI Virtual Office) Tj ET\n0.6 w 50 806 m 545 806 l S\nBT /F2 14 Tf 50 782 Td (' + cl(p.title) + ') Tj ET\nBT /F1 ' + p.sz + ' Tf ' + p.lead.toFixed(2) + ' TL 50 755 Td\n';
+        const pi = 5 + n * 2, ci = pi + 1; kids.push(pi + ' 0 R'); let c = 'BT /F2 12 Tf 50 812 Td (KANTOR MARKETING AI) Tj ET\n0.6 w 50 806 m 545 806 l S\nBT /F2 14 Tf 50 782 Td (' + cl(p.title) + ') Tj ET\nBT /F1 ' + p.sz + ' Tf ' + p.lead.toFixed(2) + ' TL 50 755 Td\n';
         p.wr.forEach(t => c += '(' + t + ') Tj T*\n'); c += 'ET\nBT /F1 8 Tf 50 28 Td (Lembar ' + (n + 1) + ' dari ' + pg.length + ' - disusun Admin Data & Arsip) Tj ET';
         ob[pi] = '<</Type/Page/Parent 2 0 R/MediaBox[0 0 595 842]/Resources<</Font<</F1 3 0 R/F2 4 0 R>>>>/Contents ' + ci + ' 0 R>>'; ob[ci] = '<</Length ' + c.length + '>>\nstream\n' + c + '\nendstream'
       });

@@ -1,2 +1,0 @@
-# kosong — otak_luar.py hanya butuh Python stdlib
-
